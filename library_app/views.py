@@ -4,6 +4,13 @@ from django.http import HttpResponseForbidden
 from datetime import timedelta
 from .models import Book, Reader, BorrowRecord, Category
 
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy,reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 def _get_or_create_reader_from_user(user):
     email = getattr(user, "email", None)
@@ -154,3 +161,107 @@ def check_overdue(request):
     return render(request, "overdue.html", {
         "overdue_records": overdue_records
     })
+
+# Authentication & Role Management module
+# Thêm decorator @login_required với các view yêu cầu đăng nhập
+# Thêm @user_passes_test(is_staff_user) với các view yêu cầu quyền staff
+
+def is_staff_user(user):
+    """Kiểm tra xem người dùng có phải staff hay không"""
+    return user.is_staff
+    
+@login_required
+@user_passes_test(is_staff_user)
+def staff_dashboard(request):
+    """Trang quản trị dành cho staff """
+    return render(request,'accounts/staff_dashboard.html')
+
+def login_view(request):
+    """Xử lí đăng nhập"""
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return render(request,'accounts/login.html',{
+                'error':'Tên đăng nhập hoặc mật khẩu không chính xác',
+                'username': username
+            })
+        login(request,user)
+        if user.is_superuser:
+            return redirect(reverse('admin:index'))
+        elif user.is_staff:
+            return redirect('staff_dashboard')
+        else:
+            return redirect('home')
+    return render(request,'accounts/login.html')
+
+def register_view(request):
+    """Đăng kí tài khoản mới"""
+    if request.method == "POST":
+        last_name = request.POST.get('last_name')
+        first_name = request.POST.get('first_name')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        if not all([last_name,first_name,username,email,password1,password2]):
+            return render(request,'accounts/register.html',{
+                'error': 'Vui lòng điền đầy đủ thông tin',
+                'last_name': last_name,
+                'first_name': first_name,
+                'username': username,
+                'email': email
+            })
+        if password1 != password2:
+            return render(request, 'accounts/register.html', {
+                'error': 'Mật khẩu không khớp',
+                'first_name': first_name,
+                'last_name': last_name,
+                'username': username,
+                'email': email
+            })
+        if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
+            messages.error(request, 'Tên đăng nhập hoặc email đã tồn tại')
+            return redirect('register')
+        user = User.objects.create_user(
+            last_name=last_name,
+            first_name=first_name,
+            username=username,
+            email=email,
+            password=password1
+        )
+        messages.success(request,'Đăng kí tài khoản thành công')
+        return redirect('login')
+    return render(request,'accounts/register.html')
+    
+@login_required
+def logout_view(request):
+    """Đăng xuất khỏi tài khoản hiện tại"""
+    logout(request)
+    return redirect('login')
+    
+@login_required
+def edit_profile(request):
+    """Chỉnh sửa hồ sơ"""
+    if request.method == "POST":
+        user = request.user
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = request.POST.get('email')
+        user.save()
+        messages.success(request,'Hồ sơ cập nhật thành công')
+        return redirect('profile')
+    return render(request,'accounts/profile.html')
+
+class UserPasswordChangeView(LoginRequiredMixin,PasswordChangeView):
+    """Thay đổi mật khẩu bằng class sẵn có"""
+    template_name = 'accounts/password_change.html'
+    success_url = reverse_lazy('profile')
+    def form_valid(self, form):
+        messages.success(self.request, 'Mật khẩu đã được thay đổi thành công')
+        return super().form_valid(form)
+    def form_invalid(self, form):
+        messages.error(self.request, 'Có lỗi khi đổi mật khẩu. Vui lòng thử lại.')
+        return super().form_invalid(form)
+        
