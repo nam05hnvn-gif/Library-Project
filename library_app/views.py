@@ -20,8 +20,11 @@ def _get_or_create_reader_from_user(user):
     reader, created = Reader.objects.get_or_create(email=email, defaults=defaults)
     return reader, created
 
-# User Views
+@login_required
 def borrow_book(request, book_id):
+    if request.method != "POST":
+        return redirect("home")
+
     book = get_object_or_404(Book, id=book_id)
 
     if book.available <= 0:
@@ -33,13 +36,16 @@ def borrow_book(request, book_id):
 
     due_date = timezone.now() + timedelta(days=14)
     BorrowRecord.objects.create(reader=reader, book=book, due_date=due_date)
-    book.available -= 1
+    book.available = max(0, book.available - 1)
     book.save()
 
     return redirect("home")
 
-# User Views
+@login_required
 def return_book(request, record_id):
+    if request.method != "POST":
+        return redirect("home")
+
     record = get_object_or_404(BorrowRecord, id=record_id)
 
     reader, _ = _get_or_create_reader_from_user(request.user)
@@ -51,8 +57,9 @@ def return_book(request, record_id):
 
     if not record.return_date:
         record.return_date = timezone.now()
-        record.book.available += 1
-        record.book.save()
+        book = record.book
+        book.available = min(book.quantity, book.available + 1)
+        book.save()
         record.save()
 
     return redirect("home")
@@ -68,7 +75,12 @@ def home(request):
         "borrow_records": borrow_records
     })
 
-# Admin/Staff Views
+def is_staff_user(user):
+    """Kiểm tra xem người dùng có phải staff hay không"""
+    return user.is_staff
+
+@login_required
+@user_passes_test(is_staff_user)
 def add_book(request):
     if request.method == "POST":
         title = request.POST.get("title")
@@ -92,7 +104,8 @@ def add_book(request):
         categories = Category.objects.all()
         return render(request, "add_book.html", {"categories": categories})
 
-# Admin/Staff Views
+@login_required
+@user_passes_test(is_staff_user)
 def edit_book(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     
@@ -108,12 +121,16 @@ def edit_book(request, book_id):
         quantity_change = new_quantity - book.quantity
         book.quantity = new_quantity
         book.available += quantity_change
+        if book.available < 0:
+            book.available = 0
+        if book.available > book.quantity:
+            book.available = book.quantity
         
         # Xử lý ảnh mới nếu có
         if "image" in request.FILES:
             # Xóa ảnh cũ nếu có
             if book.image:
-                book.image.delete()
+                book.image.delete(save=False)
             book.image = request.FILES["image"]
             
         book.save()
@@ -126,8 +143,12 @@ def edit_book(request, book_id):
             "categories": categories
         })
 
-# Admin/Staff Views
+@login_required
+@user_passes_test(is_staff_user)
 def delete_book(request, book_id):
+    if request.method != "POST":
+        return redirect("home")
+
     book = get_object_or_404(Book, id=book_id)
     
     # Kiểm tra xem có phiếu mượn chưa trả không
@@ -139,20 +160,22 @@ def delete_book(request, book_id):
 
     # Xóa ảnh cũ nếu có
     if book.image:
-        book.image.delete()
+        book.image.delete(save=False)
     
     # Xóa sách
     book.delete()
     return redirect("home")
 
-# Admin/Staff Views
+@login_required
+@user_passes_test(is_staff_user)
 def check_inventory(request):
     low_stock_books = Book.objects.filter(available__lt=5)
     return render(request, "inventory.html", {
         "low_stock_books": low_stock_books
     })
 
-# Admin/Staff Views
+@login_required
+@user_passes_test(is_staff_user)
 def check_overdue(request):
     overdue_records = BorrowRecord.objects.filter(
         return_date__isnull=True,
@@ -165,10 +188,6 @@ def check_overdue(request):
 # Authentication & Role Management module
 # Thêm decorator @login_required với các view yêu cầu đăng nhập
 # Thêm @user_passes_test(is_staff_user) với các view yêu cầu quyền staff
-
-def is_staff_user(user):
-    """Kiểm tra xem người dùng có phải staff hay không"""
-    return user.is_staff
     
 @login_required
 @user_passes_test(is_staff_user)

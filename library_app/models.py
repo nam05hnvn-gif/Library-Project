@@ -14,7 +14,7 @@ class Book(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=0)
     available = models.PositiveIntegerField(default=0)  # số sách còn
-    image = models.ImageField(null=True)
+    image = models.ImageField(upload_to="book_images/", null=True, blank=True)
 
     def __str__(self):
         return self.title
