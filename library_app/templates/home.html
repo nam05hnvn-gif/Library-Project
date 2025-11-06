@@ -1,0 +1,52 @@
+<h2>Trang chủ Thư viện</h2>
+
+<hr>
+<h3>Tìm kiếm Sách</h3>
+<form method="GET" action="">  
+    <input type="text" name="q" placeholder="Tìm sách, tác giả..." value="{{ query_search }}">
+    <button type="submit">Tìm kiếm</button>
+</form>
+<hr>
+
+<h3>Danh sách Sách</h3>
+<table border="1" style="width:100%">
+    <thead>
+        <tr>
+            <th>Tên sách</th>
+            <th>Tác giả</th>
+            <th>Thể loại</th>
+            <th>Số lượng còn lại</th>
+            <th>Mượn sách</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.category.name }}</td>
+                <td>{{ book.available }} / {{ book.quantity }}</td>
+                <td>
+                    {% if book.available > 0 %}
+                        <form method="POST" action="{% url 'borrow-book' book.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Mượn</button>
+                        </form>
+                    {% else %}
+                        (Đã hết)
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5">
+                    {% if query_search %}
+                        Không tìm thấy sách nào khớp với "{{ query_search }}".
+                    {% else %}
+                        Chưa có sách nào trong thư viện.
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

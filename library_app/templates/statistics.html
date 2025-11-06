@@ -1,0 +1,25 @@
+<h2>Bảng Thống Kê Thư Viện</h2>
+
+<p>(Đây là trang dành cho nhân viên - Nhiệm vụ 4)</p>
+
+<ul style="font-size: 1.2em; line-height: 1.6;">
+    <li>
+        <strong>Tổng số đầu sách:</strong> 
+        {{ total_books }}
+    </li>
+    <li>
+        <strong>Tổng số độc giả đã đăng ký:</strong> 
+        {{ total_readers }}
+    </li>
+    <li>
+        <strong>Số sách đang được mượn:</strong> 
+        {{ borrowed_books_count }}
+    </li>
+    <li>
+        <strong>Số sách bị quá hạn (chưa trả):</strong> 
+        <strong style="color: red;">{{ overdue_books_count }}</strong>
+    </li>
+</ul>
+
+<hr>
+<a href="/">Quay về Trang chủ</a>
