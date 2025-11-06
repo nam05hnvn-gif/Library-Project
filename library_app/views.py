@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.http import HttpResponseForbidden
 from datetime import timedelta
 from .models import Book, Reader, BorrowRecord, Category
+from django.db.models import Q
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -66,13 +67,21 @@ def return_book(request, record_id):
 
 
 def home(request):
+    query = request.GET.get('q', '')
     books = Book.objects.all()
+    if query:
+        books = books.filter(
+            Q(title__icontains=query) |
+            Q(author__icontains=query) |
+            Q(category__name__icontains=query)
+        ).distinct()
     readers = Reader.objects.all()
     borrow_records = BorrowRecord.objects.filter(return_date__isnull=True)
     return render(request, "home.html", {
         "books": books,
         "readers": readers,
         "borrow_records": borrow_records
+        "query_search": query
     })
 
 def is_staff_user(user):
@@ -165,6 +174,39 @@ def delete_book(request, book_id):
     # Xóa sách
     book.delete()
     return redirect("home")
+
+
+@login_required
+@user_passes_test(is_staff_user) # Chỉ staff mới xem được trang này
+def statistics_view(request):
+ 
+    # Đếm tổng số sách (dùng model Book)
+    total_books = Book.objects.count()
+    
+    # Đếm tổng số độc giả (dùng model Reader)
+    total_readers = Reader.objects.count()
+    
+    # Đếm số sách đang được mượn (là những cuốn có 'return_date' bị rỗng)
+    borrowed_books_count = BorrowRecord.objects.filter(return_date__isnull=True).count()
+    
+    # Lấy ngày hôm nay
+    today = timezone.now().date()
+    
+    # Đếm sách quá hạn (là sách có 'due_date' < hôm nay VÀ chưa trả)
+    overdue_books_count = BorrowRecord.objects.filter(
+        due_date__lt=today, 
+        return_date__isnull=True
+    ).count()
+
+    # Đóng gói tất cả các con số này lại
+    context = {
+        'total_books': total_books,
+        'total_readers': total_readers,
+        'borrowed_books_count': borrowed_books_count,
+        'overdue_books_count': overdue_books_count,
+    }
+    
+    return render(request, 'statistics.html', context)
 
 @login_required
 @user_passes_test(is_staff_user)
