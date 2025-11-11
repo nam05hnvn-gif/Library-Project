@@ -8,8 +8,9 @@ urlpatterns = [
     path('', views.home, name='home'),
     
     # Chức năng cho user đã đăng nhập
-    path('book/borrow/<int:book_id>/', views.borrow_book, name='borrow_book'),
-    path('book/return/<int:record_id>/', views.return_book, name='return_book'),
+    path('book/borrow/<int:book_id>/', views.borrow_book, name='borrow-book'),
+    path('book/return/<int:record_id>/', views.return_book, name='return-book'),
+
 
     # Auth / profile
     path('accounts/login/', views.login_view, name='login'),

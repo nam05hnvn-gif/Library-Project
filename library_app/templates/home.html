@@ -28,7 +28,7 @@
                 <td>{{ book.available }} / {{ book.quantity }}</td>
                 <td>
                     {% if book.available > 0 %}
-                        <form method="POST" action="{% url 'borrow-book' book.id %}">
+                        <form action="{% url 'library:borrow-book' book.id %}" method="post">
                             {% csrf_token %}
                             <button type="submit">Mượn</button>
                         </form>

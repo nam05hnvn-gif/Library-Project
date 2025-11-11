@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thư viện</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <p>Xin chào, {{ user.username }} |
+           <a href="{% url 'library:logout' %}">Đăng xuất</a>
+        </p>
+    {% else %}
+        <p><a href="{% url 'library:login' %}">Đăng nhập</a></p>
+    {% endif %}
+
+    {% if messages %}
+        <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>

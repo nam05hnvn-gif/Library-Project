@@ -80,7 +80,7 @@ def home(request):
     return render(request, "home.html", {
         "books": books,
         "readers": readers,
-        "borrow_records": borrow_records
+        "borrow_records": borrow_records,
         "query_search": query
     })
 
@@ -92,26 +92,14 @@ def is_staff_user(user):
 @user_passes_test(is_staff_user)
 def add_book(request):
     if request.method == "POST":
-        title = request.POST.get("title")
-        author = request.POST.get("author")
-        category_id = request.POST.get("category")
-        quantity = int(request.POST.get("quantity", 0))
-        image = request.FILES.get("image")
-
-        category = get_object_or_404(Category, id=category_id) if category_id else None
-
-        book = Book.objects.create(
-            title=title,
-            author=author,
-            category=category,
-            quantity=quantity,
-            available=quantity,
-            image=image
-        )
-        return redirect("home")
+        form = BookForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('library:home')
     else:
-        categories = Category.objects.all()
-        return render(request, "add_book.html", {"categories": categories})
+        form = BookForm()
+    return render(request, 'add_book.html', {'form': form})
+
 
 @login_required
 @user_passes_test(is_staff_user)
