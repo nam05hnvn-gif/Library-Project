@@ -289,7 +289,12 @@ def logout_view(request):
     """Đăng xuất khỏi tài khoản hiện tại"""
     logout(request)
     return redirect('library:home')
-    
+
+@login_required
+def profile(request):
+    user = request.user
+    return render(request, 'accounts/profile.html', {'user': user})
+
 @login_required
 def edit_profile(request):
     """Chỉnh sửa hồ sơ"""
@@ -314,3 +319,6 @@ class UserPasswordChangeView(LoginRequiredMixin,PasswordChangeView):
         messages.error(self.request, 'Có lỗi khi đổi mật khẩu. Vui lòng thử lại.')
         return super().form_invalid(form)
         
+def login_success(request):
+    # Tùy bạn, ví dụ:
+    return redirect('library:home')

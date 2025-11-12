@@ -129,3 +129,6 @@ LOGIN_REDIRECT_URL = 'library:home'
 LOGOUT_REDIRECT_URL = 'library:login'
 
 STATICFILES_DIRS = [BASE_DIR / 'library_app' / 'static']
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
