@@ -5,13 +5,20 @@
     <title>Thư viện</title>
 </head>
 <body>
-    {% if user.is_authenticated %}
-        <p>Xin chào, {{ user.username }} |
-           <a href="{% url 'library:logout' %}">Đăng xuất</a>
-        </p>
-    {% else %}
-        <p><a href="{% url 'library:login' %}">Đăng nhập</a></p>
-    {% endif %}
+    <header>
+        {% if user.is_authenticated %}
+            <p>
+                Xin chào, <strong>{{ user.username }}</strong> |
+                <a href="{% url 'library:profile' %}">Hồ sơ cá nhân</a> |
+                <a href="{% url 'library:logout' %}">Đăng xuất</a>
+            </p>
+        {% else %}
+            <p>
+                <a href="{% url 'library:login' %}">Đăng nhập</a> |
+                <a href="{% url 'library:register' %}">Đăng ký</a>
+            </p>
+        {% endif %}
+    </header>
 
     {% if messages %}
         <ul>
@@ -21,6 +28,7 @@
         </ul>
     {% endif %}
 
+    <hr>
     {% block content %}{% endblock %}
 </body>
 </html>

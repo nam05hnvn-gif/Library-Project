@@ -40,12 +40,12 @@ def borrow_book(request, book_id):
     book.available = max(0, book.available - 1)
     book.save()
 
-    return redirect("home")
+    return redirect("library:home")
 
 @login_required
 def return_book(request, record_id):
     if request.method != "POST":
-        return redirect("home")
+        return redirect("library:home")
 
     record = get_object_or_404(BorrowRecord, id=record_id)
 
@@ -95,7 +95,7 @@ def add_book(request):
         form = BookForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('library:home')
+            return redirect("library:home")
     else:
         form = BookForm()
     return render(request, 'add_book.html', {'form': form})
@@ -131,7 +131,7 @@ def edit_book(request, book_id):
             book.image = request.FILES["image"]
             
         book.save()
-        return redirect("home")
+        return redirect("library:home")
         
     else:
         categories = Category.objects.all()
@@ -144,7 +144,7 @@ def edit_book(request, book_id):
 @user_passes_test(is_staff_user)
 def delete_book(request, book_id):
     if request.method != "POST":
-        return redirect("home")
+        return redirect("library:home")
 
     book = get_object_or_404(Book, id=book_id)
     
@@ -240,9 +240,9 @@ def login_view(request):
         if user.is_superuser:
             return redirect(reverse('admin:index'))
         elif user.is_staff:
-            return redirect('staff_dashboard')
+            return redirect('library:staff_dashboard')
         else:
-            return redirect('home')
+            return redirect('library:home')
     return render(request,'accounts/login.html')
 
 def register_view(request):
@@ -272,7 +272,7 @@ def register_view(request):
             })
         if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
             messages.error(request, 'Tên đăng nhập hoặc email đã tồn tại')
-            return redirect('register')
+            return redirect('library:register')
         user = User.objects.create_user(
             last_name=last_name,
             first_name=first_name,
@@ -281,14 +281,14 @@ def register_view(request):
             password=password1
         )
         messages.success(request,'Đăng kí tài khoản thành công')
-        return redirect('login')
+        return redirect('library:login')
     return render(request,'accounts/register.html')
     
 @login_required
 def logout_view(request):
     """Đăng xuất khỏi tài khoản hiện tại"""
     logout(request)
-    return redirect('login')
+    return redirect('library:home')
     
 @login_required
 def edit_profile(request):
@@ -300,13 +300,13 @@ def edit_profile(request):
         user.email = request.POST.get('email')
         user.save()
         messages.success(request,'Hồ sơ cập nhật thành công')
-        return redirect('profile')
+        return redirect('library:profile')
     return render(request,'accounts/profile.html')
 
 class UserPasswordChangeView(LoginRequiredMixin,PasswordChangeView):
     """Thay đổi mật khẩu bằng class sẵn có"""
     template_name = 'accounts/password_change.html'
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('library:profile')
     def form_valid(self, form):
         messages.success(self.request, 'Mật khẩu đã được thay đổi thành công')
         return super().form_valid(form)

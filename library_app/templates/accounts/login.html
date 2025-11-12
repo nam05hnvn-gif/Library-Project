@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Đăng nhập</h2>
+
+{% if error %}
+<p style="color:red">{{ error }}</p>
+{% endif %}
+
+<p>
+    <button type="button" onclick="history.back();">← Quay lại</button>
+</p>
+
+<form method="post">
+    {% csrf_token %}
+    <label for="username">Tên đăng nhập:</label><br>
+    <input type="text" name="username" id="username" value="{{ username|default:'' }}"><br><br>
+
+    <label for="password">Mật khẩu:</label><br>
+    <input type="password" name="password" id="password"><br><br>
+
+    <button type="submit">Đăng nhập</button>
+</form>
+
+<p>Chưa có tài khoản? <a href="{% url 'library:register' %}">Đăng ký ngay</a></p>
+{% endblock %}
