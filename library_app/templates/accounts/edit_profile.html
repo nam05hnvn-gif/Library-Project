@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Chỉnh sửa hồ sơ</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <p>Họ: <input type="text" name="first_name" value="{{ request.user.first_name }}"></p>
+    <p>Tên: <input type="text" name="last_name" value="{{ request.user.last_name }}"></p>
+    <button type="submit">Lưu thay đổi</button>
+</form>
+
+<p><a href="{% url 'library:profile' %}">Quay lại hồ sơ</a></p>
+{% endblock %}

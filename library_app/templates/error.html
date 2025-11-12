@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width:720px; margin:40px auto;">
+  <div class="alert alert-danger">
+    <h4 class="alert-heading">Lỗi</h4>
+    <p>{{ message|default:"Đã xảy ra lỗi. Vui lòng thử lại." }}</p>
+  </div>
+
+  <div class="d-flex justify-content-between mt-3">
+    <a href="{% url 'library:home' %}" class="btn btn-secondary">Về trang chính</a>
+    <a href="javascript:history.back()" class="btn btn-light">Quay lại</a>
+  </div>
+</div>
+{% endblock %}

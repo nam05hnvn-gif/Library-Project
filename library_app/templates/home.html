@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="venue-tickets">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-6">
+                <h2>Kho sách</h2>
+            </div>
+            <form method="get" action="{% url 'library:home' %}" class="col-6">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm kiếm sách..." value="{{ request.GET.q|default:'' }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">Tìm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="row">
+            {% for book in books %}
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    {% if book.image %}
+                        <img class="card-img-top" src="{{ book.image.url }}" alt="{{ book.title }}">
+                    {% else %}
+                        <img class="card-img-top" src="{% static 'images/default-book.jpg' %}" alt="{{ book.title }}">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ book.title }}</h5>
+                        <p class="mb-1"><strong>Tác giả:</strong> {{ book.author }}</p>
+                        <p class="mb-1"><strong>Thể loại:</strong> {{ book.category.name|default:"N/A" }}</p>
+                        <p class="mb-2"><strong>Còn:</strong> {{ book.available }} / {{ book.quantity }}</p>
+
+                        <div class="mt-auto">
+                            {% if user.is_authenticated %}
+                                {% if book.available > 0 %}
+                                    <form action="{% url 'library:borrow_book' book.id %}" method="post" class="d-inline-block w-100 mb-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary w-100">Mượn</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-secondary w-100" disabled>Đã hết</button>
+                                {% endif %}
+                            {% else %}
+                                <a class="btn btn-info w-100" href="{% url 'library:login' %}">Đăng nhập để mượn</a>
+                            {% endif %}
+
+                            {% if user.is_staff %}
+                                <div class="d-flex mt-2">
+                                    <a href="{% url 'library:edit_book' book.id %}" class="btn btn-warning mr-2 flex-fill">Sửa</a>
+                                    <form action="{% url 'library:delete_book' book.id %}" method="post" class="flex-fill" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger w-100">Xóa</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p>Không tìm thấy sách.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<div class="my-borrow-section bg-light py-4 mt-4">
+    <div class="container">
+        <h3 class="mb-3">Sách của tôi</h3>
+
+        {% if borrow_records %}
+        <div class="row">
+            {% for record in borrow_records %}
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ record.book.title }}</h5>
+                        <p class="card-text mb-1"><strong>Tác giả:</strong> {{ record.book.author }}</p>
+                        <p class="card-text mb-1"><strong>Ngày mượn:</strong> {{ record.borrow_date|date:"d/m/Y H:i" }}</p>
+                        <p class="card-text mb-2">
+                            <strong>Hạn trả:</strong>
+                            {% if record.due_date|date:"Y-m-d" < today %}
+                                <span class="badge badge-danger">{{ record.due_date|date:"d/m/Y" }} (QUÁ HẠN)</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ record.due_date|date:"d/m/Y" }}</span>
+                            {% endif %}
+                        </p>
+
+                        <form method="post" action="{% url 'library:return_book' record.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">Trả sách</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p class="text-center text-muted">Bạn chưa mượn sách nào.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

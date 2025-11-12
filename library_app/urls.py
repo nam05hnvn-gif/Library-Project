@@ -11,12 +11,13 @@ urlpatterns = [
     path('book/borrow/<int:book_id>/', views.borrow_book, name='borrow_book'),
     path('book/return/<int:record_id>/', views.return_book, name='return_book'),
 
+
     # Auth / profile
     path('accounts/login/', views.login_view, name='login'),
     path('accounts/logout/', views.logout_view, name='logout'),
     path('accounts/register/', views.register_view, name='register'),
-    path('accounts/profile/', views.edit_profile, name='profile'),
-    path('accounts/staff/', views.staff_dashboard, name='staff_dashboard'),
+    path('profile/', views.profile, name='profile'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('accounts/password-change/', views.UserPasswordChangeView.as_view(), name='password_change'),
     
     # Chức năng cho admin/staff
@@ -25,4 +26,6 @@ urlpatterns = [
     path('book/delete/<int:book_id>/', views.delete_book, name='delete_book'),
     path('inventory/', views.check_inventory, name='check_inventory'),
     path('overdue/', views.check_overdue, name='check_overdue'),
+
+    path('statistics/', views.statistics_view, name='statistics'),
 ]

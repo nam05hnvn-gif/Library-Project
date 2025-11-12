@@ -3,6 +3,8 @@ from django.utils import timezone
 from django.http import HttpResponseForbidden
 from datetime import timedelta
 from .models import Book, Reader, BorrowRecord, Category
+from .form import BookForm
+from django.db.models import Q
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -39,12 +41,12 @@ def borrow_book(request, book_id):
     book.available = max(0, book.available - 1)
     book.save()
 
-    return redirect("home")
+    return redirect("library:home")
 
 @login_required
 def return_book(request, record_id):
     if request.method != "POST":
-        return redirect("home")
+        return redirect("library:home")
 
     record = get_object_or_404(BorrowRecord, id=record_id)
 
@@ -62,17 +64,31 @@ def return_book(request, record_id):
         book.save()
         record.save()
 
-    return redirect("home")
+    return redirect("library:home")
 
 
 def home(request):
+    query = request.GET.get('q', '')
     books = Book.objects.all()
+    if query:
+        books = books.filter(
+            Q(title__icontains=query) |
+            Q(author__icontains=query)
+        ).distinct()
     readers = Reader.objects.all()
-    borrow_records = BorrowRecord.objects.filter(return_date__isnull=True)
+    borrow_records = []
+    if request.user.is_authenticated:
+        reader, _ = _get_or_create_reader_from_user(request.user)
+        if reader:
+            borrow_records = BorrowRecord.objects.filter(
+                reader=reader,
+                return_date__isnull=True
+            )
     return render(request, "home.html", {
         "books": books,
         "readers": readers,
-        "borrow_records": borrow_records
+        "borrow_records": borrow_records,
+        "query_search": query
     })
 
 def is_staff_user(user):
@@ -83,26 +99,18 @@ def is_staff_user(user):
 @user_passes_test(is_staff_user)
 def add_book(request):
     if request.method == "POST":
-        title = request.POST.get("title")
-        author = request.POST.get("author")
-        category_id = request.POST.get("category")
-        quantity = int(request.POST.get("quantity", 0))
-        image = request.FILES.get("image")
-
-        category = get_object_or_404(Category, id=category_id) if category_id else None
-
-        book = Book.objects.create(
-            title=title,
-            author=author,
-            category=category,
-            quantity=quantity,
-            available=quantity,
-            image=image
-        )
-        return redirect("home")
+        form = BookForm(request.POST, request.FILES)
+        if form.is_valid():
+            book = form.save(commit=False)
+            # Khi thêm sách mới, gán available = quantity
+            book.available = book.quantity
+            book.save()
+            messages.success(request, "Thêm sách thành công")
+            return redirect('library:home')
     else:
-        categories = Category.objects.all()
-        return render(request, "add_book.html", {"categories": categories})
+        form = BookForm()
+    return render(request, 'add_book.html', {'form': form})
+
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -134,7 +142,7 @@ def edit_book(request, book_id):
             book.image = request.FILES["image"]
             
         book.save()
-        return redirect("home")
+        return redirect("library:home")
         
     else:
         categories = Category.objects.all()
@@ -147,7 +155,7 @@ def edit_book(request, book_id):
 @user_passes_test(is_staff_user)
 def delete_book(request, book_id):
     if request.method != "POST":
-        return redirect("home")
+        return redirect("library:home")
 
     book = get_object_or_404(Book, id=book_id)
     
@@ -164,7 +172,40 @@ def delete_book(request, book_id):
     
     # Xóa sách
     book.delete()
-    return redirect("home")
+    return redirect("library:home")
+
+
+@login_required
+@user_passes_test(is_staff_user) # Chỉ staff mới xem được trang này
+def statistics_view(request):
+ 
+    # Đếm tổng số sách (dùng model Book)
+    total_books = Book.objects.count()
+    
+    # Đếm tổng số độc giả (dùng model Reader)
+    total_readers = Reader.objects.count()
+    
+    # Đếm số sách đang được mượn (là những cuốn có 'return_date' bị rỗng)
+    borrowed_books_count = BorrowRecord.objects.filter(return_date__isnull=True).count()
+    
+    # Lấy ngày hôm nay
+    today = timezone.now().date()
+    
+    # Đếm sách quá hạn (là sách có 'due_date' < hôm nay VÀ chưa trả)
+    overdue_books_count = BorrowRecord.objects.filter(
+        due_date__lt=today, 
+        return_date__isnull=True
+    ).count()
+
+    # Đóng gói tất cả các con số này lại
+    context = {
+        'total_books': total_books,
+        'total_readers': total_readers,
+        'borrowed_books_count': borrowed_books_count,
+        'overdue_books_count': overdue_books_count,
+    }
+    
+    return render(request, 'statistics.html', context)
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -188,12 +229,7 @@ def check_overdue(request):
 # Authentication & Role Management module
 # Thêm decorator @login_required với các view yêu cầu đăng nhập
 # Thêm @user_passes_test(is_staff_user) với các view yêu cầu quyền staff
-    
-@login_required
-@user_passes_test(is_staff_user)
-def staff_dashboard(request):
-    """Trang quản trị dành cho staff """
-    return render(request,'accounts/staff_dashboard.html')
+
 
 def login_view(request):
     """Xử lí đăng nhập"""
@@ -210,9 +246,9 @@ def login_view(request):
         if user.is_superuser:
             return redirect(reverse('admin:index'))
         elif user.is_staff:
-            return redirect('staff_dashboard')
+            return redirect('library:staff_dashboard')
         else:
-            return redirect('home')
+            return redirect('library:home')
     return render(request,'accounts/login.html')
 
 def register_view(request):
@@ -242,7 +278,7 @@ def register_view(request):
             })
         if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
             messages.error(request, 'Tên đăng nhập hoặc email đã tồn tại')
-            return redirect('register')
+            return redirect('library:register')
         user = User.objects.create_user(
             last_name=last_name,
             first_name=first_name,
@@ -251,15 +287,20 @@ def register_view(request):
             password=password1
         )
         messages.success(request,'Đăng kí tài khoản thành công')
-        return redirect('login')
+        return redirect('library:login')
     return render(request,'accounts/register.html')
     
 @login_required
 def logout_view(request):
     """Đăng xuất khỏi tài khoản hiện tại"""
     logout(request)
-    return redirect('login')
-    
+    return redirect('library:home')
+
+@login_required
+def profile(request):
+    user = request.user
+    return render(request, 'accounts/profile.html', {'user': user})
+
 @login_required
 def edit_profile(request):
     """Chỉnh sửa hồ sơ"""
@@ -267,20 +308,17 @@ def edit_profile(request):
         user = request.user
         user.first_name = request.POST.get('first_name')
         user.last_name = request.POST.get('last_name')
-        user.email = request.POST.get('email')
         user.save()
-        messages.success(request,'Hồ sơ cập nhật thành công')
-        return redirect('profile')
-    return render(request,'accounts/profile.html')
+        return redirect('library:profile')
+    return render(request,'accounts/edit_profile.html')
 
 class UserPasswordChangeView(LoginRequiredMixin,PasswordChangeView):
     """Thay đổi mật khẩu bằng class sẵn có"""
     template_name = 'accounts/password_change.html'
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('library:profile')
     def form_valid(self, form):
         messages.success(self.request, 'Mật khẩu đã được thay đổi thành công')
         return super().form_valid(form)
     def form_invalid(self, form):
         messages.error(self.request, 'Có lỗi khi đổi mật khẩu. Vui lòng thử lại.')
         return super().form_invalid(form)
-        

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="m-0">Thống kê thư viện</h2>
+        <div>
+            <a href="{% url 'library:check_inventory' %}" class="btn btn-sm btn-outline-info">Tồn kho</a>
+            <a href="{% url 'library:check_overdue' %}" class="btn btn-sm btn-outline-warning">Quá hạn</a>
+            <a href="{% url 'library:home' %}" class="btn btn-sm btn-secondary">Về trang chính</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng đầu sách</h5>
+                    <p class="display-4 mb-0">{{ total_books }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng độc giả</h5>
+                    <p class="display-4 mb-0">{{ total_readers }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Đang mượn</h5>
+                    <p class="display-4 mb-0">{{ borrowed_books_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100 border-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Quá hạn (chưa trả)</h5>
+                    <p class="display-4 mb-0 text-danger">{{ overdue_books_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <p class="text-muted mb-0">Lưu ý: Các số liệu cập nhật theo thời điểm truy vấn. Bạn có thể kiểm tra chi tiết trong mục <a href="{% url 'library:check_overdue' %}">Sách quá hạn</a> và <a href="{% url 'library:check_inventory' %}">Tồn kho</a>.</p>
+    </div>
+</div>
+{% endblock %}

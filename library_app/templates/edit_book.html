@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Chỉnh sửa sách</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+      <label for="title" class="form-label">Tên sách</label>
+      <input type="text" class="form-control" id="title" name="title" value="{{ book.title }}">
+    </div>
+
+    <div class="mb-3">
+      <label for="author" class="form-label">Tác giả</label>
+      <input type="text" class="form-control" id="author" name="author" value="{{ book.author }}">
+    </div>
+
+    <div class="mb-3">
+      <label for="category" class="form-label">Thể loại</label>
+      <select class="form-select" id="category" name="category">
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if book.category and book.category.id == cat.id %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="quantity" class="form-label">Số lượng</label>
+      <input type="number" class="form-control" id="quantity" name="quantity" value="{{ book.quantity }}" min="0">
+    </div>
+
+    <div class="mb-3">
+      <label for="image" class="form-label">Ảnh bìa (chọn mới nếu muốn thay)</label>
+      {% if book.image %}
+        <div class="mb-2">
+          <img src="{{ book.image.url }}" alt="Ảnh bìa" width="150">
+        </div>
+      {% endif %}
+      <input type="file" class="form-control" id="image" name="image">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    <a href="{% url 'library:home' %}" class="btn btn-secondary">Hủy</a>
+  </form>
+</div>
+{% endblock %}
