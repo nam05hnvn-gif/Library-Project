@@ -73,8 +73,7 @@ def home(request):
     if query:
         books = books.filter(
             Q(title__icontains=query) |
-            Q(author__icontains=query) |
-            Q(category__name__icontains=query)
+            Q(author__icontains=query)
         ).distinct()
     readers = Reader.objects.all()
     borrow_records = []
@@ -230,12 +229,7 @@ def check_overdue(request):
 # Authentication & Role Management module
 # Thêm decorator @login_required với các view yêu cầu đăng nhập
 # Thêm @user_passes_test(is_staff_user) với các view yêu cầu quyền staff
-    
-@login_required
-@user_passes_test(is_staff_user)
-def staff_dashboard(request):
-    """Trang quản trị dành cho staff """
-    return render(request,'accounts/staff_dashboard.html')
+
 
 def login_view(request):
     """Xử lí đăng nhập"""
@@ -314,11 +308,9 @@ def edit_profile(request):
         user = request.user
         user.first_name = request.POST.get('first_name')
         user.last_name = request.POST.get('last_name')
-        user.email = request.POST.get('email')
         user.save()
-        messages.success(request,'Hồ sơ cập nhật thành công')
         return redirect('library:profile')
-    return render(request,'accounts/profile.html')
+    return render(request,'accounts/edit_profile.html')
 
 class UserPasswordChangeView(LoginRequiredMixin,PasswordChangeView):
     """Thay đổi mật khẩu bằng class sẵn có"""
@@ -330,7 +322,3 @@ class UserPasswordChangeView(LoginRequiredMixin,PasswordChangeView):
     def form_invalid(self, form):
         messages.error(self.request, 'Có lỗi khi đổi mật khẩu. Vui lòng thử lại.')
         return super().form_invalid(form)
-        
-def login_success(request):
-    # Tùy bạn, ví dụ:
-    return redirect('library:home')

@@ -5,9 +5,17 @@
 <div class="venue-tickets">
     <div class="container-fluid">
         <div class="row mb-4">
-            <div class="col-12">
+            <div class="col-6">
                 <h2>Kho sách</h2>
             </div>
+            <form method="get" action="{% url 'library:home' %}" class="col-6">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm kiếm sách..." value="{{ request.GET.q|default:'' }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">Tìm</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <div class="row">
@@ -54,7 +62,7 @@
             </div>
             {% empty %}
             <div class="col-12">
-                <p>Chưa có sách nào trong thư viện.</p>
+                <p>Không tìm thấy sách.</p>
             </div>
             {% endfor %}
         </div>
