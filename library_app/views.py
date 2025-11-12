@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.http import HttpResponseForbidden
 from datetime import timedelta
 from .models import Book, Reader, BorrowRecord, Category
+from .form import BookForm
 from django.db.models import Q
 
 from django.contrib import messages
@@ -63,7 +64,7 @@ def return_book(request, record_id):
         book.save()
         record.save()
 
-    return redirect("home")
+    return redirect("library:home")
 
 
 def home(request):
@@ -76,7 +77,14 @@ def home(request):
             Q(category__name__icontains=query)
         ).distinct()
     readers = Reader.objects.all()
-    borrow_records = BorrowRecord.objects.filter(return_date__isnull=True)
+    borrow_records = []
+    if request.user.is_authenticated:
+        reader, _ = _get_or_create_reader_from_user(request.user)
+        if reader:
+            borrow_records = BorrowRecord.objects.filter(
+                reader=reader,
+                return_date__isnull=True
+            )
     return render(request, "home.html", {
         "books": books,
         "readers": readers,
@@ -94,8 +102,12 @@ def add_book(request):
     if request.method == "POST":
         form = BookForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect("library:home")
+            book = form.save(commit=False)
+            # Khi thêm sách mới, gán available = quantity
+            book.available = book.quantity
+            book.save()
+            messages.success(request, "Thêm sách thành công")
+            return redirect('library:home')
     else:
         form = BookForm()
     return render(request, 'add_book.html', {'form': form})
@@ -161,7 +173,7 @@ def delete_book(request, book_id):
     
     # Xóa sách
     book.delete()
-    return redirect("home")
+    return redirect("library:home")
 
 
 @login_required
