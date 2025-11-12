@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">Kiểm tra tồn kho</h2>
+    <a href="{% url 'library:home' %}" class="btn btn-sm btn-secondary">Về trang chính</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if low_stock_books %}
+      <p class="text-muted">Các sách có số lượng còn ít:</p>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped mb-0">
+          <thead>
+            <tr>
+              <th>Tiêu đề</th>
+              <th>Tác giả</th>
+              <th>Thể loại</th>
+              <th>Còn lại</th>
+              <th>Tổng</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for book in low_stock_books %}
+            <tr>
+              <td>{{ book.title }}</td>
+              <td>{{ book.author }}</td>
+              <td>{{ book.category.name|default:"N/A" }}</td>
+              <td>{{ book.available }}</td>
+              <td>{{ book.quantity }}</td>
+              <td>
+                <a href="{% url 'library:edit_book' book.id %}" class="btn btn-sm btn-warning">Sửa</a>
+                <form action="{% url 'library:delete_book' book.id %}" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center text-muted mb-0">Không có sách nào sắp hết.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

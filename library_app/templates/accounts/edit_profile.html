@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Chỉnh sửa hồ sơ</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <p>Tên người dùng: <input type="text" name="username" value="{{ request.user.username }}"></p>
+    <p>Email: <input type="email" name="email" value="{{ request.user.email }}"></p>
+    <button type="submit">Lưu thay đổi</button>
+</form>
+
+<p><a href="{% url 'profile' %}">Quay lại hồ sơ</a></p>
+<p><a href="javascript:history.back()">⬅ Quay lại trang trước</a></p>
+{% endblock %}

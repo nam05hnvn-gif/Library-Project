@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">Sách quá hạn</h2>
+    <a href="{% url 'library:home' %}" class="btn btn-sm btn-secondary">Về trang chính</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if overdue_records %}
+      <p class="text-muted">Danh sách các phiếu mượn quá hạn (chưa trả):</p>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped mb-0">
+          <thead>
+            <tr>
+              <th>Độc giả</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Sách</th>
+              <th>Ngày mượn</th>
+              <th>Hạn trả</th>
+              <th>Quá hạn</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in overdue_records %}
+            <tr>
+              <td>{{ record.reader.name }}</td>
+              <td>{{ record.reader.email }}</td>
+              <td>{{ record.reader.phone|default:"N/A" }}</td>
+              <td>{{ record.book.title }}</td>
+              <td>{{ record.borrow_date|date:"d/m/Y H:i" }}</td>
+              <td>{{ record.due_date|date:"d/m/Y" }}</td>
+              <td>
+                <span class="text-danger">
+                  {{ record.due_date|timesince }} trước
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center text-muted mb-0">Không có phiếu mượn nào quá hạn.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
