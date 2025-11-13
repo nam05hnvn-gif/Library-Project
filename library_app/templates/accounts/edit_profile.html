@@ -1,14 +1,98 @@
 {% extends "base.html" %}
 
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
 {% block content %}
-<h2>Chỉnh sửa hồ sơ</h2>
+<div class="edit-profile-container">
+    <h2>Chỉnh Sửa Hồ Sơ Cá Nhân</h2>
 
-<form method="POST">
-    {% csrf_token %}
-    <p>Họ: <input type="text" name="first_name" value="{{ request.user.first_name }}"></p>
-    <p>Tên: <input type="text" name="last_name" value="{{ request.user.last_name }}"></p>
-    <button type="submit">Lưu thay đổi</button>
-</form>
+    <form method="POST" class="edit-profile-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="first_name">Họ:</label>
+            <input type="text" id="first_name" name="first_name"
+                   value="{{ request.user.first_name }}" required>
+        </div>
 
-<p><a href="{% url 'library:profile' %}">Quay lại hồ sơ</a></p>
+        <div class="form-group">
+            <label for="last_name">Tên:</label>
+            <input type="text" id="last_name" name="last_name"
+                   value="{{ request.user.last_name }}" required>
+        </div>
+
+        <div class="form-buttons">
+            <button type="submit" class="btn-save">💾 Lưu Thay Đổi</button>
+            <a href="{% url 'library:profile' %}" class="btn-cancel">↩ Quay Lại Hồ Sơ</a>
+        </div>
+    </form>
+
+    <hr style="margin: 30px 0;">
+</div>
+
+<style>
+    body {
+        font-family: 'Open Sans', 'Roboto', sans-serif;
+    }
+
+    .edit-profile-container {
+        width: 90%;
+        max-width: 500px;
+        margin: 40px auto;
+        padding: 25px;
+        background-color: #f9f9f9;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .edit-profile-container h2,
+    .edit-profile-container h3 {
+        text-align: center;
+        color: #333;
+    }
+
+    .edit-profile-form .form-group {
+        margin-bottom: 18px;
+    }
+
+    .edit-profile-form input[type="text"] {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .form-buttons {
+        text-align: center;
+        margin-top: 25px;
+    }
+
+    .btn-save {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .btn-cancel, .btn-password {
+        display: inline-block;
+        margin-left: 10px;
+        text-decoration: none;
+        color: white;
+        background-color: #6c757d;
+        padding: 10px 16px;
+        border-radius: 6px;
+    }
+
+    .btn-password {
+        background-color: #28a745;
+    }
+
+    .btn-password:hover {
+        background-color: #218838;
+    }
+</style>
 {% endblock %}

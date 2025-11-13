@@ -7,7 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="Tooplate">
-    <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <title>Đăng nhập - Thư viện số</title>
 
@@ -16,6 +18,18 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/font-awesome.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/owl-carousel.css' %}">
     <link rel="stylesheet" href="{% static 'css/tooplate-artxibition.css' %}">
+
+    <style>
+        /* Áp dụng font Open Sans cho phần tổng thể */
+        body, h1, h2, h3, h4, h5, h6, p, a, input, button {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        /* Áp dụng Roboto cho các phần động như flexslider, tiêu đề nổi bật */
+        .flexslider, .main-dark-button, .logo, h2, h3 {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
 </head>
 
 <body>
@@ -27,7 +41,7 @@
             <div class="col-12">
                 <nav class="main-nav">
                     <!-- Logo -->
-                    <a href="{% url 'library:home' %}" class="logo">Library<em>System</em></a>
+                    <a href="{% url 'library:home' %}" class="logo">Lib<em>Python</em></a>
                     <!-- Menu -->
                     <ul class="nav">
                         <li><a href="{% url 'library:home' %}">Home</a></li>

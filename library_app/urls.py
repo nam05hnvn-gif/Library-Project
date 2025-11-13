@@ -18,6 +18,7 @@ urlpatterns = [
     path('accounts/register/', views.register_view, name='register'),
     path('profile/', views.profile, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('profile/change-password/', views.UserPasswordChangeView.as_view(), name='profile_change_password'),
     path('accounts/password-change/', views.UserPasswordChangeView.as_view(), name='password_change'),
     
     # Chức năng cho admin/staff

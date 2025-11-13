@@ -68,13 +68,23 @@ def return_book(request, record_id):
 
 
 def home(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()  # Lấy nội dung người dùng nhập
+    category_filter = request.GET.get('category', '')  # Nếu có chọn thể loại
     books = Book.objects.all()
+
+    # Nếu có nội dung tìm kiếm
     if query:
         books = books.filter(
             Q(title__icontains=query) |
-            Q(author__icontains=query)
+            Q(author__icontains=query) |
+            Q(category__name__icontains=query)            
         ).distinct()
+
+    # Nếu có chọn thể loại cụ thể
+    if category_filter:
+        books = books.filter(category__name__iexact=category_filter)
+
+    # Thông tin người đọc và phiếu mượn
     readers = Reader.objects.all()
     borrow_records = []
     if request.user.is_authenticated:
@@ -84,11 +94,16 @@ def home(request):
                 reader=reader,
                 return_date__isnull=True
             )
+
+    categories = Category.objects.all().order_by('name')  # Gửi sang để hiển thị dropdown lọc thể loại
+
     return render(request, "home.html", {
         "books": books,
         "readers": readers,
         "borrow_records": borrow_records,
-        "query_search": query
+        "query_search": query,
+        "categories": categories,
+        "selected_category": category_filter
     })
 
 def is_staff_user(user):

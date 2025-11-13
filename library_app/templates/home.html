@@ -8,16 +8,17 @@
             <div class="col-6">
                 <h2>Kho sách</h2>
             </div>
-            <form method="get" action="{% url 'library:home' %}" class="col-6">
-                <div class="input-group">
-                    <input type="text" name="q" class="form-control" placeholder="Tìm kiếm sách..." value="{{ request.GET.q|default:'' }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">Tìm</button>
-                    </div>
-                </div>
+            <form method="get" action="{% url 'library:home' %}" class="search-form">
+                <input type="text" name="q" placeholder="Tìm kiếm sách, tác giả, mô tả..." value="{{ query_search }}">
+                <select name="category">
+                    <option value="">Tất cả thể loại</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.name }}" {% if cat.name == selected_category %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Tìm kiếm</button>
             </form>
         </div>
-
         <div class="row">
             {% for book in books %}
             <div class="col-lg-4 mb-4">
